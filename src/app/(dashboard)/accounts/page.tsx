@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 type Page = {id:string;name:string;instagram:{id:string;name:string}|null};
+// Warn a week before a platform forces a reconnect.
+const reconnectSoon=(date?:string|null)=>Boolean(date&&new Date(date).getTime()-Date.now()<7*24*60*60*1000);
 export default function AccountsPage() {
   const [accounts,setAccounts]=useState<SocialAccount[]>([]);
   const [pages,setPages]=useState<Page[]>([]);
@@ -36,7 +38,7 @@ export default function AccountsPage() {
       {!pages.length && <p>No eligible pages found. Check that you are an admin of the Page (and, for Instagram, that it is linked as a Professional account), then reconnect.</p>}
       {pages.map(p=><label key={p.id} className="flex gap-3"><input type="checkbox" checked={selected.includes(p.id)} onChange={e=>setSelected(e.target.checked?[...selected,p.id]:selected.filter(id=>id!==p.id))}/>{p.name}{p.instagram?` · Instagram: ${p.instagram.name}`:""}</label>)}
       <Button disabled={busy||!selected.length} onClick={confirm}>Confirm connection</Button></CardContent></Card>}
-    {accounts.map(a=><Card key={a.id}><CardContent className="p-6 space-y-3"><h2 className="font-semibold">{a.accountName} · {a.platform}</h2><p>{a.connectionStatus.replaceAll("_"," ")}</p><p>Available: {Object.entries(a.capabilities).filter(([,v])=>v).map(([k])=>k).join(", ")||"Reconnect to enable features"}</p>
+    {accounts.map(a=><Card key={a.id}><CardContent className="p-6 space-y-3"><h2 className="font-semibold">{a.accountName} · {a.platform}</h2><p>{a.connectionStatus.replaceAll("_"," ")}</p>{a.connectionStatus==="CONNECTED"&&reconnectSoon(a.reconnectBy)&&<p role="status" className="rounded-lg bg-amber-50 p-3 text-sm">{a.platform==="LINKEDIN"?"LinkedIn":"Meta"} requires a reconnect by {new Date(a.reconnectBy!).toLocaleDateString()}. Reconnect now so scheduled posts keep working.</p>}<p>Available: {Object.entries(a.capabilities).filter(([,v])=>v).map(([k])=>k).join(", ")||"Reconnect to enable features"}</p>
       <div className="flex gap-3"><Button disabled={busy} variant="outline" onClick={()=>connect(a.platform==="LINKEDIN"&&a.kind==="page"?"linkedin-pages":a.platform.toLowerCase())}>Reconnect</Button><Button disabled={busy||a.connectionStatus==="DISCONNECTED"} variant="outline" onClick={()=>disconnect(a.id)}>Disconnect</Button></div></CardContent></Card>)}
     <p className="text-sm text-slate-500">LinkedIn profile posts as you; LinkedIn Page posts as a company Page you administer. YouTube posts are video uploads. TikTok and X are planned integrations.</p>
   </div>;

@@ -87,6 +87,8 @@ export interface SocialAccount {
   platform: SocialPlatform;
   accountName: string;
   kind?: string | null;
+  /** Earliest date the platform requires a reconnect (LinkedIn token, Meta 90-day data access). */
+  reconnectBy?: string | null;
   connectionStatus: string;
   capabilities: { publishing?: boolean; messaging?: boolean; comments?: boolean };
   tokenExpiry?: string | null;
